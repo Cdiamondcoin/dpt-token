@@ -1,30 +1,27 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/token/BurnableToken.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../lib/openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol";
+import "../lib/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 /**
- * @title CDC
- * @dev CDC coin.
+ * @title DPT
+ * @dev DPT coin.
  */
-contract CDC is Ownable, BurnableToken {
+contract DPT is StandardBurnableToken, Ownable {
 
-    string public constant name = "CDC";
-    string public constant symbol = "CDC";
+    string public constant name = "DPT";
+    string public constant symbol = "DPT";
     uint8 public constant decimals = 18;
-
-    uint256 public constant INITIAL_SUPPLY = 16000000 * (10 ** uint256(decimals));
-
     uint256 public rate = 1 ether;
 
     /**
     * @dev Constructor that gives msg.sender all of existing tokens.
     */
-    function CDC() public {
-        totalSupply = INITIAL_SUPPLY;
-        balances[msg.sender] = INITIAL_SUPPLY;
-        Transfer(address(0), msg.sender, INITIAL_SUPPLY);
+    constructor() public {
+        totalSupply_ = 10000000 * (10 ** uint256(decimals));
+        balances[msg.sender] = totalSupply_;
+        emit Transfer(address(0), msg.sender, totalSupply_);
     }
 
     function setRate(uint256 newRate) public onlyOwner {
@@ -59,7 +56,7 @@ contract CDC is Ownable, BurnableToken {
         // SafeMath.sub will throw if there is not enough balance.
         balances[owner] = balances[owner].sub(_value);
         balances[msg.sender] = balances[msg.sender].add(_value);
-        Transfer(owner, msg.sender, _value);
+        emit Transfer(owner, msg.sender, _value);
         return true;
     }
 
