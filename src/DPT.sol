@@ -1,78 +1,29 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.23;
 
-import "../lib/openzeppelin-solidity/contracts/token/ERC20/StandardBurnableToken.sol";
-import "../lib/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-
+import "ds-token/token.sol";
 
 /**
  * @title DPT
  * @dev DPT coin.
  */
-contract DPT is StandardBurnableToken, Ownable {
-
+contract DPT is DSToken {
     string public constant name = "DPT";
-    string public constant symbol = "DPT";
-    uint8 public constant decimals = 18;
-    uint256 public rate = 1 ether;
+    bytes32 public constant symbol = "DPT";
+    uint8 public constant decimals = 18 ;
 
     /**
     * @dev Constructor that gives msg.sender all of existing tokens.
     */
-    constructor() public {
-        totalSupply_ = 10000000 * (10 ** uint256(decimals));
-        balances[msg.sender] = totalSupply_;
-        emit Transfer(address(0), msg.sender, totalSupply_);
-    }
-
-    function setRate(uint256 newRate) public onlyOwner {
-        rate = newRate;
+    constructor() DSToken(symbol) public {
+        uint totalSupply_ = mul(10 ** 7 , (10 ** uint(decimals)));
+        super.mint(totalSupply_);
+        transfer(owner, totalSupply_);
     }
 
     /**
-    * @dev Fallback function is used to buy tokens.
+    * @dev override mint() function in DSToken so that no token can be minted only once in the constructor()
     */
-    function () external payable {
-        buyTokens();
+    function mint(uint) public {
+        revert("No minting possible.");
     }
-
-    /**
-    * @dev Low level token purchase function.
-    */
-    function buyTokens() public payable {
-        require(validPurchase());
-        uint256 weiAmount = msg.value;
-        // calculate token amount to be transfered
-        uint256 tokens = rate.mul(weiAmount).div(1 ether);
-        forwardFundsToOwner();
-        transferFromOwner(tokens);
-    }
-
-    /**
-    * @dev Transfer tokens from owner.
-    */
-    function transferFromOwner(uint256 _value) private returns (bool) {
-        require(msg.sender != address(0));
-        require(_value <= balances[owner]);
-        // SafeMath.sub will throw if there is not enough balance.
-        balances[owner] = balances[owner].sub(_value);
-        balances[msg.sender] = balances[msg.sender].add(_value);
-        emit Transfer(owner, msg.sender, _value);
-        return true;
-    }
-
-    /**
-    * @dev Transfer eth to owner.
-    */
-    function forwardFundsToOwner() internal {
-        owner.transfer(msg.value);
-    }
-
-    /**
-    * @dev Return true if the transaction can buy tokens.
-    */
-    function validPurchase() internal view returns (bool) {
-        bool nonZeroPurchase = msg.value != 0;
-        return nonZeroPurchase;
-    }
-
 }
