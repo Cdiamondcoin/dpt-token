@@ -16,7 +16,7 @@ contract DPTICOEvents {
     event TokenBought(address owner, address sender, uint dptValue, uint _ethUSDRate, uint _dptUSDRate);
     event FeedValid(bool feedValid);
 }
-contract DPTICO is DSAuth, DSStop, DSMath {
+contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     uint public rate = 1 ether;         //set exchange rate of 1 DPT/ETH
     uint public _dptUSDRate;            //usd price of 1 DPT token. 18 digit precision
     uint public _ethUSDRate;            //price of ETH in USD. 18 digit precision
