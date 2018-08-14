@@ -145,7 +145,6 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
         feed.setEthUsdRate(ethUsdRate);
         user.doBuyTokens(sendEth);
         assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
-        assert(false);
     }
 
     function testBuyTenTokensSetEthUsdAndDptUsdRateStatic() public {
