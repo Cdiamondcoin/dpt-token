@@ -6,16 +6,16 @@ import "./DPTICO.sol";
 import "./DPT.sol"; 
 
 contract TestMedianizerLike {
-    bytes32 _ethUSDRate;
+    bytes32 _ethUsdRate;
     bool _feedValid;
 
-    constructor(uint ethUSDRate, bool feedValid) public {
-        _ethUSDRate = bytes32(ethUSDRate);
+    constructor(uint ethUsdRate, bool feedValid) public {
+        _ethUsdRate = bytes32(ethUsdRate);
         _feedValid = feedValid;
     }
     
-    function setETHUSDRate(uint ethUSDRate) public {
-        _ethUSDRate = bytes32(ethUSDRate);
+    function setEthUsdRate(uint ethUsdRate) public {
+        _ethUsdRate = bytes32(ethUsdRate);
     }
     
     function setValid(bool feedValid) public {
@@ -23,7 +23,7 @@ contract TestMedianizerLike {
     }
 
     function peek() external view returns (bytes32, bool) {
-        return (_ethUSDRate,_feedValid);
+        return (_ethUsdRate,_feedValid);
     } 
 }
 
@@ -50,13 +50,13 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     DPTICOTester user;
     uint etherBalance ;
     uint sendEth;
-    uint ethUSDRate = 317.96 ether;
-    uint dptUSDRate = 3.5 ether;
+    uint ethUsdRate = 317.96 ether;
+    uint dptUsdRate = 3.5 ether;
     
     function setUp() public {
         dpt = new DPT();
-        feed = new TestMedianizerLike(ethUSDRate, true); 
-        ico = new DPTICO(dpt, feed, dptUSDRate, ethUSDRate);
+        feed = new TestMedianizerLike(ethUsdRate, true); 
+        ico = new DPTICO(dpt, feed, dptUsdRate, ethUsdRate);
         user = new DPTICOTester(ico);
         dpt.approve(ico, uint(-1));
         require(dpt.balanceOf(this) == DPT_SUPPLY);
@@ -80,7 +80,7 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     function testOthersBuyTenTokens() public {
         sendEth = 10 ether;
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
     function testFailBuyTenTokensIfIcoStopped() public {
@@ -114,88 +114,89 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     function testBuyTokens() public {
         sendEth = 10 ether;
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
     function testBuyTokensSetDptUsdRate() public {
         sendEth = 10 ether;
-        dptUSDRate = 5 ether ;
-        ico.setDPTRate(dptUSDRate);
+        dptUsdRate = 5 ether ;
+        ico.setDptRate(dptUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
     function testFailBuyTokensSetZeroDptUsdRate() public {
-        ico.setDPTRate(0);
+        ico.setDptRate(0);
     }
 
     function testBuyTokensSetEthUsdRate() public {
         sendEth = 10 ether;
-        ethUSDRate = 300 ether;
-        feed.setETHUSDRate(ethUSDRate);
+        ethUsdRate = 300 ether;
+        feed.setEthUsdRate(ethUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
     function testBuyTokensSetEthUsdAndDptUsdRate() public {
         sendEth = 10 ether;
-        ethUSDRate = 300 ether;
-        dptUSDRate = 5 ether ;
-        ico.setDPTRate(dptUSDRate);
-        feed.setETHUSDRate(ethUSDRate);
+        ethUsdRate = 300 ether;
+        dptUsdRate = 5 ether ;
+        ico.setDptRate(dptUsdRate);
+        feed.setEthUsdRate(ethUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
+        assert(false);
     }
 
     function testBuyTenTokensSetEthUsdAndDptUsdRateStatic() public {
-        ico.setDPTRate(5 ether);
-        feed.setETHUSDRate(20 ether);
+        ico.setDptRate(5 ether);
+        feed.setEthUsdRate(20 ether);
         user.doBuyTokens(10 ether);
         assertEq(dpt.balanceOf(user), 40 ether);
     }
 
     function testBuyTokenSetManualEthUsdRateUpdate() public {
         sendEth = 10 ether;
-        ethUSDRate = 300 ether;
+        ethUsdRate = 300 ether;
         feed.setValid(false);
-        ico.setManualUSDRate(true);
-        ico.setETHRate(ethUSDRate);
+        ico.setManualUsdRate(true);
+        ico.setEthRate(ethUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
-    function testFailBuyTokenSetManualEthUsdRateUpdateIfManuaUSDRatelIsFalse() public {
+    function testFailBuyTokenSetManualEthUsdRateUpdateIfManuaUsdRatelIsFalse() public {
         sendEth = 10 ether;
-        ethUSDRate = 300 ether;
-        ico.setETHRate(ethUSDRate);
+        ethUsdRate = 300 ether;
+        ico.setEthRate(ethUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUSDRate, sendEth), dptUSDRate)));
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
     function testInvalidFeedDoesNotUpdateEthUsdRate() public {
         sendEth = 134 ether;
-        uint feedEthUSDRate = 1400 ether; //should not equal to `ethUSDRate` if you want a reasonable test
-        ico.setManualUSDRate(true);
+        uint feedEthUsdRate = 1400 ether; //should not equal to `ethUsdRate` if you want a reasonable test
+        ico.setManualUsdRate(true);
         feed.setValid(false);
-        feed.setETHUSDRate(feedEthUSDRate);
+        feed.setEthUsdRate(feedEthUsdRate);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(user), wdiv(wmul(ethUSDRate, sendEth), dptUSDRate));
+        assertEq(dpt.balanceOf(user), wdiv(wmul(ethUsdRate, sendEth), dptUsdRate));
     }
 
     function testFailInvalidFeedFailsIfManualUpdateIsFalse() public {
         sendEth = 134 ether;
-        ico.setManualUSDRate(false);
+        ico.setManualUsdRate(false);
         feed.setValid(false);
         user.doBuyTokens(sendEth);
     }
 
     function testSetFeed() public {
         sendEth = 10 ether;
-        ethUSDRate = 2000 ether;
-        TestMedianizerLike feed1 = new TestMedianizerLike(ethUSDRate, true);
+        ethUsdRate = 2000 ether;
+        TestMedianizerLike feed1 = new TestMedianizerLike(ethUsdRate, true);
         ico.setPriceFeed(feed1);
         user.doBuyTokens(sendEth);
-        assertEq(dpt.balanceOf(user), wdiv(wmul(ethUSDRate, sendEth), dptUSDRate));
+        assertEq(dpt.balanceOf(user), wdiv(wmul(ethUsdRate, sendEth), dptUsdRate));
     }
 
     function testFailSetZeroAddressFeed() public {

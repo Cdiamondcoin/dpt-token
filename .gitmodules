@@ -16,3 +16,6 @@
 [submodule "lib/medianizer"]
 	path = lib/medianizer
 	url = https://github.com/makerdao/medianizer.git
+[submodule "lib/ds-note"]
+	path = lib/ds-note
+	url = https://github.com/dapphub/ds-note.git
