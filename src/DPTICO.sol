@@ -13,9 +13,14 @@ contract MedianizerLike {
  * @dev DPTICO contract.
  */
 contract DPTICOEvents {
-    event TokenBought(address owner, address sender, uint dptValue, uint _ethUSDRate, uint _dptUSDRate);
-    event FeedValid(bool feedValid);
+    event LogBuyToken(address owner, address sender, uint dptValue, uint _ethUSDRate, uint _dptUSDRate);
+    event LogFeedValid(bool feedValid);
+    event LogDptUsdRate(uint _dptUSDRate);
+    event LogEthUsdRate(uint _ethUSDRate);
+    event LogPriceFeed(address _priceFeed);
+    event LogManualUSDRate(bool _manualUSDRate);
 }
+
 contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     uint public rate = 1 ether;         //set exchange rate of 1 DPT/ETH
     uint public _dptUSDRate;            //usd price of 1 DPT token. 18 digit precision
@@ -23,14 +28,15 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     MedianizerLike public _priceFeed;   //address of the Makerdao price feed
     bool public feedValid;              //if true feed has valid USD/ETH rate
     DSToken public _dpt;                //DPT token contract
+    bool public _manualUSDRate;         //if true enables token buy even if _priceFeed does not provide valid data
 
     /**
     * @dev Constructor that gives msg.sender all of existing tokens.
     */
-    constructor(DSToken dpt, MedianizerLike priceFeed, uint usdPrice, uint etherUsdRate) public {
-         _dpt = dpt;
-         _priceFeed = priceFeed;
-         _dptUSDRate = usdPrice;
+    constructor(address dpt, address priceFeed, uint dptUSDRate, uint etherUsdRate) public {
+         _dpt = DSToken(dpt);
+         _priceFeed = MedianizerLike(priceFeed);
+         _dptUSDRate = dptUSDRate;
          _ethUSDRate = etherUsdRate;
     }
 
@@ -47,22 +53,29 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     function buyTokens() public payable stoppable {
         uint tokens;
         bool feedValidSave = feedValid;
+        bytes32 ethUSDRateB;
         require(msg.value != 0);
-        (bytes32 ethUSDRateB, feedValid) = _priceFeed.peek();
-        if(feedValidSave != feedValid) { emit FeedValid(feedValid); }
-        require(feedValid || _manualUSDRate);
-        _ethUSDRate = uint(ethUSDRateB);
+        
+        (ethUSDRateB, feedValid) = _priceFeed.peek();           //receive ETH/USD price from external feed
+        if(feedValidSave != feedValid) { emit LogFeedValid(feedValid); }   //emit LogFeedValid event if validity of feed changes
+        if(feedValid) {                                                 //if feed is valid, load ETH/USD rate from it
+            _ethUSDRate = uint(ethUSDRateB); 
+        }else{
+            require(_manualUSDRate);
+        }
         tokens = wdiv(wmul(_ethUSDRate, msg.value), _dptUSDRate);
         address(owner).transfer(msg.value);
         _dpt.transferFrom(owner, msg.sender, tokens);
-        emit TokenBought(owner, msg.sender, tokens, _ethUSDRate, _dptUSDRate);
+        emit LogBuyToken(owner, msg.sender, tokens, _ethUSDRate, _dptUSDRate);
     }
 
     /**
     * @dev Set exchange rate DPT/USD value. 
     */
-    function setUSDRate(uint256 dptUSDRate) public auth {
+    function setDPTRate(uint dptUSDRate) public auth {
+        require(dptUSDRate > 0);
         _dptUSDRate = dptUSDRate;
+        emit LogDptUsdRate(_dptUSDRate);
     }
 
     /**
@@ -72,16 +85,19 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     * valid price data.
     *
     */
-    function setETHRate(uint256 dptUSDRate) public auth {
+    function setETHRate(uint ethUSDRate) public auth {
         require(_manualUSDRate);
-        _ethUSDRate = dptUSDRate;
+        _ethUSDRate = ethUSDRate;
+        emit LogEthUsdRate(_ethUSDRate);
     }
 
     /**
     * @dev Set the price feed
     */
     function setPriceFeed(address priceFeed) public auth {
-        _priceFeed = priceFeed;
+        require(priceFeed != 0x0);
+        _priceFeed = MedianizerLike(priceFeed);
+        emit LogPriceFeed(address(_priceFeed));
     }
 
     /**
@@ -94,5 +110,6 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     */
     function setManualUSDRate(bool manualUSDRate) public auth {
         _manualUSDRate = manualUSDRate;
+        emit LogManualUSDRate(_manualUSDRate);
     }
 }
