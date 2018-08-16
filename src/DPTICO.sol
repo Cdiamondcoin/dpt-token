@@ -4,21 +4,44 @@ import "ds-math/math.sol";
 import "ds-auth/auth.sol";
 import "ds-token/token.sol";
 import "ds-stop/stop.sol";
+import "ds-note/note.sol";
 
+contract MedianizerLike {
+    function peek() external view returns (bytes32, bool); 
+}
 /**
  * @title DPT
  * @dev DPTICO contract.
  */
-contract DPTICO is DSAuth, DSStop, DSMath {
-    uint256 public rate = 1 ether;  //set exchange rate of 1 DPT/ETH
+contract DPTICOEvents {
+    event LogBuyToken(
+        address owner, 
+        address sender, 
+        uint ethValue,
+        uint dptValue, 
+        uint ethUsdRate, 
+        uint dptUsdRate
+    );
+    event LogFeedValid(bool feedValid);
+}
 
-    DSToken _dpt;                   //DPT token contract
+contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
+    uint public rate = 1 ether;        //set exchange rate of 1 DPT/ETH
+    uint public dptUsdRate;            //usd price of 1 DPT token. 18 digit precision
+    uint public ethUsdRate;            //price of ETH in USD. 18 digit precision
+    MedianizerLike public priceFeed;   //address of the Makerdao price feed
+    bool public feedValid;             //if true feed has valid USD/ETH rate
+    ERC20 public dpt;                  //DPT token contract
+    bool public manualUsdRate = true;  //if true enables token buy even if priceFeed does not provide valid data
 
     /**
-    * @dev Constructor that gives msg.sender all of existing tokens.
+    * @dev Constructor 
     */
-    constructor(DSToken dpt) public {
-         _dpt = dpt;
+    constructor(address dpt_, address priceFeed_, uint dptUsdRate_, uint ethUsdRate_) public {
+         dpt = ERC20(dpt_);
+         priceFeed = MedianizerLike(priceFeed_);
+         dptUsdRate = dptUsdRate_;
+         ethUsdRate = ethUsdRate_;
     }
 
     /**
@@ -33,16 +56,60 @@ contract DPTICO is DSAuth, DSStop, DSMath {
     */
     function buyTokens() public payable stoppable {
         uint tokens;
+        bool feedValidSave = feedValid;
+        bytes32 ethUsdRateB;
         require(msg.value != 0);
-        tokens = wmul(rate, msg.value);
+        
+        (ethUsdRateB, feedValid) = priceFeed.peek();                       //receive ETH/USD price from external feed
+        if(feedValidSave != feedValid) { emit LogFeedValid(feedValid); }   //emit LogFeedValid event if validity of feed changes
+        if(feedValid) {                                                     
+            ethUsdRate = uint(ethUsdRateB);                                //if feed is valid, load ETH/USD rate from it
+        }else{
+            require(manualUsdRate);                                        //if feed invalid revert if manualUSDRate_ is NOT allowed
+        }
+        tokens = wdiv(wmul(ethUsdRate, msg.value), dptUsdRate);
         address(owner).transfer(msg.value);
-        _dpt.transferFrom(owner, msg.sender, tokens);
+        dpt.transferFrom(owner, msg.sender, tokens);
+        emit LogBuyToken(owner, msg.sender, msg.value, tokens, ethUsdRate, dptUsdRate);
     }
 
     /**
-    * @dev Set exchange rate DPT/ETH value. 
+    * @dev Set exchange rate DPT/USD value. 
     */
-    function setRate(uint256 newRate) public auth {
-        rate = newRate;
+    function setDptRate(uint dptUsdRate_) public auth note {
+        require(dptUsdRate_ > 0);
+        dptUsdRate = dptUsdRate_;
+    }
+
+    /**
+    * @dev Set exchange rate DPT/ETH value manually.
+    * 
+    * This function should only be used if the priceFeed does not return
+    * valid price data.
+    *
+    */
+    function setEthRate(uint ethUsdRate_) public auth note {
+        require(manualUsdRate);
+        ethUsdRate = ethUsdRate_;
+    }
+
+    /**
+    * @dev Set the price feed
+    */
+    function setPriceFeed(address priceFeed_) public auth note {
+        require(priceFeed_ != 0x0);
+        priceFeed = MedianizerLike(priceFeed_);
+    }
+
+    /**
+    * @dev Set manual feed update
+    * 
+    * If `manualUsdRate` is true, then `buyTokens()` will calculate the DPT amount based on latest valid `ethUsdRate`, 
+    * so `ethUsdRate` must be updated by admins if priceFeed fails to provide valid price data.
+    * 
+    * If manualUsdRate is false, then buyTokens() will simply revert if priceFeed does not provide valid price data.
+    */
+    function setManualUsdRate(bool manualUsdRate_) public auth note {
+        manualUsdRate = manualUsdRate_;
     }
 }

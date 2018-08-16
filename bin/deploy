@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+### deploy -- command-line interface to deploy DPTICO smart contract
+### Usage: deploy 
+
+### Before using deploy, you should copy the keystore file from your keystore to current directory. See:
+### geth - https://github.com/ethereum/go-ethereum/wiki/Backup-&-restore
+### parity - https://ethereum.stackexchange.com/questions/6471/where-are-my-keys-and-chain-data-located-if-i-am-using-parity
+
+set -ex
+
+## Settings
+PRICE_FEED="0x729D19f657BD0614b4985Cf1D82531c67569197B" #MakerDAO pricefeed address
+DPT_USD_RATE=3.5    #DPT price in terms of US Dollars (you can modify it in the smart ocntract)
+ETH_USD_RATE=259.84 #just a default value. The rate is received from PRICE_FEED.
+
+## Internal settings (do not touch these unless you know what you are doing!!)
+export ETH_KEYSTORE=`pwd`
+export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
+
+test -z $SYMBOL && exit 1
+
+if ! [[ $PRICE_FEED =~ ^0x[0-9a-fA-F]{40}$ ]]
+    then
+        exit 1
+fi
+
+if ! [[ $DPT_USD_RATE =~ ^[0-9.]+$ ]]
+    then
+        exit 1
+fi
+
+if ! [[ $ETH_USD_RATE =~ ^[0-9.]+$ ]]
+    then
+        exit 1
+fi
+
+export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
+export ETH_GAS=${ETH_GAS:-"4000000"}
+export ETH_FROM=$(seth rpc eth_coinbase)
+export NETWORK=$(seth chain)
+
+test -z $NETWORK && exit 1
+
+dapp build
+
+DPT=$(dapp create DPT)
+
+export DPT=$DPT
+echo "DPT DEPLOYED AT: $DPT\n"
+
+test -z $DPT && exit 1
+
+DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
+
+export DPTICO=$DPTICO
+echo "DPTICO DEPLOYED AT: $DPTICO\n"
