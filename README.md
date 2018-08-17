@@ -2,9 +2,9 @@
 
 One of the main purposes of [Diamond Network Project](https://cdiamondcoin.com/) is to create a diamond backed stable coin. To use the services of the platform you will need a utility token called DPT - Diamond Platform Token. Current repository contains the [ERC20](https://github.com/ethereum/EIPs/issues/20) compatible smart contract of DPT token, and also the smart contract supporting the ICO of DPT.
 
-## Prerequisities 
+## Prerequisities
 
-In order to compile smart contracts you need to install [Dapphub](https://dapphub.com/)'s utilities. Namely: [dapp](https://dapp.tools/dapp/), [seth](https://dapp.tools/seth/), [solc](https://github.com/ethereum/solidity), [hevm](https://dapp.tools/hevm/), and [ethsign](https://github.com/dapphub/dapptools/tree/master/src/ethsign). 
+In order to compile smart contracts you need to install [Dapphub](https://dapphub.com/)'s utilities. Namely: [dapp](https://dapp.tools/dapp/), [seth](https://dapp.tools/seth/), [solc](https://github.com/ethereum/solidity), [hevm](https://dapp.tools/hevm/), and [ethsign](https://github.com/dapphub/dapptools/tree/master/src/ethsign).
 
 | Command | Description |
 | --- | --- |
@@ -13,7 +13,13 @@ In order to compile smart contracts you need to install [Dapphub](https://dapphu
 |`git clone --recursive https://github.com/dapphub/dapptools $HOME/.dapp/dapptools` | download `dapp seth solc hevm ethsign` utilities|
 |`nix-env -f $HOME/.dapp/dapptools -iA dapp seth solc hevm ethsign` | install `dapp seth solc hevm ethsign`. This will install utilities for current user only!!|
 
-## Installing smart contracts 
+## Building smart contracts
+
+The `build` command invokes `solc` to compile all code in `src` and `lib` to `out`.
+
+`dapp build`
+
+## Installing smart contracts
 
 As a result of installation .abi and .bin files will be created in `dpt-token/out/` folder. These files can be installed later on mainnet.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ### deploy -- command-line interface to deploy DPTICO smart contract
-### Usage: deploy 
+### Usage: deploy
 
 ### Before using deploy, you should copy the keystore file from your keystore to current directory. See:
 ### geth - https://github.com/ethereum/go-ethereum/wiki/Backup-&-restore

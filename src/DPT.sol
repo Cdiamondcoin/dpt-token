@@ -15,7 +15,7 @@ contract DPT is DSToken {
     * @dev Constructor that gives msg.sender all of existing tokens.
     */
     constructor() DSToken(symbol) public {
-        uint totalSupply_ = mul(10 ** 7 , (10 ** uint(decimals)));
+        uint totalSupply_ = mul(10 ** 7, (10 ** uint(decimals)));
         super.mint(totalSupply_);
         transfer(owner, totalSupply_);
     }
