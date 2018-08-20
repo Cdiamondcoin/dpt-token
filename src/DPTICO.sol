@@ -26,7 +26,6 @@ contract DPTICOEvents {
 }
 
 contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
-    uint public rate = 1 ether;        //set exchange rate of 1 DPT/ETH
     uint public dptUsdRate;            //usd price of 1 DPT token. 18 digit precision
     uint public ethUsdRate;            //price of ETH in USD. 18 digit precision
     MedianizerLike public priceFeed;   //address of the Makerdao price feed
