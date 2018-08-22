@@ -6,24 +6,24 @@ import "./DPTICO.sol";
 import "./DPT.sol"; 
 
 contract TestMedianizerLike {
-    bytes32 _ethUsdRate;
-    bool _feedValid;
+    bytes32 public ethUsdRate;
+    bool public feedValid;
 
-    constructor(uint ethUsdRate, bool feedValid) public {
-        _ethUsdRate = bytes32(ethUsdRate);
-        _feedValid = feedValid;
+    constructor(uint ethUsdRate_, bool feedValid_) public {
+        ethUsdRate = bytes32(ethUsdRate_);
+        feedValid = feedValid_;
     }
     
-    function setEthUsdRate(uint ethUsdRate) public {
-        _ethUsdRate = bytes32(ethUsdRate);
+    function setEthUsdRate(uint ethUsdRate_) public {
+        ethUsdRate = bytes32(ethUsdRate_);
     }
     
-    function setValid(bool feedValid) public {
-        _feedValid = feedValid;
+    function setValid(bool feedValid_) public {
+        feedValid = feedValid_;
     }
 
     function peek() external view returns (bytes32, bool) {
-        return (_ethUsdRate,_feedValid);
+        return (ethUsdRate,feedValid);
     } 
 }
 

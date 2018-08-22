@@ -11,13 +11,15 @@ set -ex
 ## Settings
 PRICE_FEED="0x729D19f657BD0614b4985Cf1D82531c67569197B" #MakerDAO pricefeed address
 DPT_USD_RATE=3.5    #DPT price in terms of US Dollars (you can modify it in the smart ocntract)
-ETH_USD_RATE=259.84 #just a default value. The rate is received from PRICE_FEED.
+ETH_USD_RATE=259.84 #default value for ETH/USD rate. The rate is received from PRICE_FEED.
+
+## Settings for test networks like Rinkeby, Kovan, Ropsten
+export TEST_ETH_USD_RATE=301 #USD/ETH rate that the testfeed will provide
+export TEST_FEED_VALID=true  #testfeed will provide valid results
 
 ## Internal settings (do not touch these unless you know what you are doing!!)
 export ETH_KEYSTORE=`pwd`
 export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
-
-test -z $SYMBOL && exit 1
 
 if ! [[ $PRICE_FEED =~ ^0x[0-9a-fA-F]{40}$ ]]
     then
@@ -36,7 +38,7 @@ fi
 
 export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
 export ETH_GAS=${ETH_GAS:-"4000000"}
-export ETH_FROM=$(seth rpc eth_coinbase)
+#export ETH_FROM=$(seth rpc eth_coinbase)
 export NETWORK=$(seth chain)
 
 test -z $NETWORK && exit 1
@@ -46,11 +48,39 @@ dapp build
 DPT=$(dapp create DPT)
 
 export DPT=$DPT
-echo "DPT DEPLOYED AT: $DPT\n"
+echo -e "DPT DEPLOYED AT: $DPT\n"
 
 test -z $DPT && exit 1
 
 DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
 
 export DPTICO=$DPTICO
-echo "DPTICO DEPLOYED AT: $DPTICO\n"
+echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
+
+#enable DPTICO to manage DPT tokens
+seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+#Print settings
+
+echo -e "DPTICO settings:\n"
+for variable in dptUsdRate ethUsdRate 
+do
+  echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $DPTICO "$variable()")))\n"
+done
+
+for variable in priceFeed feedValid dpt manualUsdRate
+do
+  echo -e "$variable:$(seth call $DPTICO "$variable()")\n"
+done
+
+#if we are on testnet, create test feed
+if  ! [[ $NETWORK =~ ^(ethlive|etclive)$ ]]
+then
+	PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
+	seth send $DPTICO "setPriceFeed(address)" $PRICE_FEED
+	echo -e "Test price feed address: $PRICE_FEED\n"
+	variable=ethUsdRate
+	echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))\n"
+	variable=feedValid
+	echo -e "$variable:$(seth call $PRICE_FEED "$variable()")\n"
+fi
