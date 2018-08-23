@@ -83,6 +83,29 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     }
 
     /**
+    * @dev Get tokenAmount price in ETH
+    */
+    function getPrice(uint tokenAmount) public view returns (uint) {
+        bool feedValid_;
+        uint ethUsdRate_;
+        bytes32 ethUsdRateB;
+        require(tokenAmount > 0, "Invalid amount");
+
+        // receive ETH/USD price from external feed
+        (ethUsdRateB, feedValid_) = priceFeed.peek();
+
+        if (feedValid_) {
+            ethUsdRate_ = uint(ethUsdRateB);
+        } else {
+            // load manual ETH/USD rate if enabled
+            require(manualUsdRate, "Manual rate not allowed");
+            ethUsdRate_ = ethUsdRate;
+        }
+
+        return wdiv(wmul(tokenAmount, dptUsdRate), ethUsdRate_);
+    }
+
+    /**
     * @dev Set exchange rate DPT/USD value.
     */
     function setDptRate(uint dptUsdRate_) public auth note {

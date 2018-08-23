@@ -2,8 +2,8 @@ pragma solidity ^0.4.18;
 
 import "ds-test/test.sol";
 import "ds-math/math.sol";
-import "./DPTICO.sol"; 
-import "./DPT.sol"; 
+import "./DPTICO.sol";
+import "./DPT.sol";
 
 contract TestMedianizerLike {
     bytes32 public ethUsdRate;
@@ -13,29 +13,29 @@ contract TestMedianizerLike {
         ethUsdRate = bytes32(ethUsdRate_);
         feedValid = feedValid_;
     }
-    
+
     function setEthUsdRate(uint ethUsdRate_) public {
         ethUsdRate = bytes32(ethUsdRate_);
     }
-    
+
     function setValid(bool feedValid_) public {
         feedValid = feedValid_;
     }
 
     function peek() external view returns (bytes32, bool) {
         return (ethUsdRate,feedValid);
-    } 
+    }
 }
 
 contract DPTICOTester {
     DPTICO public _ico;
-    
+
     constructor(DPTICO ico) public {
         _ico = ico;
     }
 
     function doBuyTokens(uint amount) public {
-        _ico.buyTokens.value(amount)();    
+        _ico.buyTokens.value(amount)();
     }
 
     function () external payable {
@@ -52,10 +52,10 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     uint sendEth;
     uint ethUsdRate = 317.96 ether;
     uint dptUsdRate = 3.5 ether;
-    
+
     function setUp() public {
         dpt = new DPT();
-        feed = new TestMedianizerLike(ethUsdRate, true); 
+        feed = new TestMedianizerLike(ethUsdRate, true);
         ico = new DPTICO(dpt, feed, dptUsdRate, ethUsdRate);
         user = new DPTICOTester(ico);
         dpt.approve(ico, uint(-1));
@@ -64,12 +64,12 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
         address(user).transfer(1000 ether);
         etherBalance = address(this).balance;
     }
-    
+
     function () external payable {
     }
-    
+
     function buyTokens(uint sendValue) private {
-        ico.buyTokens.value(sendValue)(); 
+        ico.buyTokens.value(sendValue)();
     }
 
     function testWeBuyTenTokens() public {
@@ -104,7 +104,7 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
         //uint(-1) is the largest unsigned integer that can be represented with uint256
         buyTokens(uint(-1));
     }
-    
+
     function testEthSentToOwner() public {
         sendEth = 10 ether;
         user.doBuyTokens(sendEth);
@@ -199,7 +199,30 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     }
 
     function testFailSetZeroAddressFeed() public {
-        TestMedianizerLike feed1 ;
+        TestMedianizerLike feed1;
         ico.setPriceFeed(feed1);
+    }
+
+    function testFailZeroTokenGetPrice() public view {
+        ico.getPrice(0);
+    }
+
+    function testValidGetPriceWithFeedPrice() public {
+        ethUsdRate = 350 ether;
+        dptUsdRate = 3.5 ether;
+        assertEq(ico.getPrice(100), 1);
+    }
+
+    function testValidGetPriceWithManualRate() public {
+        ethUsdRate = 400 ether;
+        dptUsdRate = 4 ether;
+        feed.setValid(false);
+        assertEq(ico.getPrice(100), 1);
+    }
+
+    function testFailGetPriceWithInvalidFeedAndDisabledManualRate() public {
+        ico.setManualUsdRate(false);
+        feed.setValid(false);
+        ico.getPrice(100);
     }
 }
