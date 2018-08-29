@@ -119,7 +119,7 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
 
     function testBuyTokensSetDptUsdRate() public {
         sendEth = 10 ether;
-        dptUsdRate = 5 ether ;
+        dptUsdRate = 5 ether;
         ico.setDptRate(dptUsdRate);
         user.doBuyTokens(sendEth);
         assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
@@ -140,7 +140,7 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     function testBuyTokensSetEthUsdAndDptUsdRate() public {
         sendEth = 10 ether;
         ethUsdRate = 300 ether;
-        dptUsdRate = 5 ether ;
+        dptUsdRate = 5 ether;
         ico.setDptRate(dptUsdRate);
         feed.setEthUsdRate(ethUsdRate);
         user.doBuyTokens(sendEth);
@@ -150,8 +150,8 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
     function testBuyTenTokensSetEthUsdAndDptUsdRateStatic() public {
         ico.setDptRate(5 ether);
         feed.setEthUsdRate(20 ether);
-        user.doBuyTokens(10 ether);
-        assertEq(dpt.balanceOf(user), 40 ether);
+        user.doBuyTokens(10.5 ether);
+        assertEq(dpt.balanceOf(user), 42 ether);
     }
 
     function testBuyTokenSetManualEthUsdRateUpdate() public {
@@ -213,11 +213,27 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
         assertEq(ico.getPrice(100), 1);
     }
 
-    function testValidGetPriceWithManualRate() public {
-        ethUsdRate = 400 ether;
-        dptUsdRate = 4 ether;
+    function testGetPriceDecimalWithFeedPrice() public {
+        ethUsdRate = 350 ether;
+        dptUsdRate = 3.5 ether;
+        feed.setEthUsdRate(ethUsdRate);
+        assertEq(ico.getPrice(275 ether), 2.75 ether);
+    }
+
+    function testGetPriceDecimalMoreAfterCommaWithFeedPrice() public {
+        ethUsdRate = 299.99 ether;
+        dptUsdRate = 3.5 ether;
+        feed.setEthUsdRate(ethUsdRate);
+        assertEq(ico.getPrice(32 ether), 0.373345778192606420 ether);
+    }
+
+    function testGetPriceWithManualRate() public {
+        ethUsdRate = 157.5 ether;
+        dptUsdRate = 3.5 ether;
         feed.setValid(false);
-        assertEq(ico.getPrice(100), 1);
+        ico.setEthRate(ethUsdRate);
+        ico.setManualUsdRate(true);
+        assertEq(ico.getPrice(31 ether), 0.688888888888888889 ether);
     }
 
     function testFailGetPriceWithInvalidFeedAndDisabledManualRate() public {
