@@ -25,7 +25,7 @@ As a result of installation .abi and .bin files will be created in `dpt-token/ou
 
 | Command | Description |
 | --- | --- |
-|`git clone https://github.com/trialine/dpt-token.git` | Clone the smart contract code.|
+|`git clone https://github.com/Cdiamondcoin/dpt-token.git` | Clone the smart contract code.|
 |`cd dpt-token && git submodule update --init --recursive` | Update libraries to the latest version.|
 |`dapp test` | Compile and test the smart contracts.|
 
@@ -38,9 +38,9 @@ In order to deploy smart contracts you need to do the followings.
 
 ## Authors
 
-- [Vital Belikov](https://github.com/Brick85)
-- [Aleksejs Osovitnijs](https://github.com/alexxxxey)
+- [Robert Horvath](https://github.com/r001)
 - [Vitālijs Gaičuks](https://github.com/vgaicuks)
+- [Aleksejs Osovitnijs](https://github.com/alexxxxey)
 
 ## License
 
