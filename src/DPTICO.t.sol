@@ -117,6 +117,29 @@ contract DPTICOTest is DSTest, DSMath, DPTICOEvents {
         assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
     }
 
+    function testBuyTokensGreatThanMinimalInvestment() public {
+        sendEth = 500 ether;
+        ico.setMinDptInvestmenAmount(500);
+        user.doBuyTokens(sendEth);
+        assertEq(dpt.balanceOf(this),DPT_SUPPLY - (wdiv(wmul(ethUsdRate, sendEth), dptUsdRate)));
+    }
+
+    function testFailBuyTokensZeroAmount() public {
+        sendEth = 0 ether;
+        user.doBuyTokens(sendEth);
+    }
+
+    function testFailBuyTokensZeroEth() public {
+        sendEth = 0 ether;
+        user.doBuyTokens(sendEth);
+    }
+
+    function testFailBuyTokensLessThanMinimalInvestment() public {
+        sendEth = 0 ether;
+        ico.setMinDptInvestmenAmount(500);
+        user.doBuyTokens(sendEth);
+    }
+
     function testBuyTokensSetDptUsdRate() public {
         sendEth = 10 ether;
         dptUsdRate = 5 ether;

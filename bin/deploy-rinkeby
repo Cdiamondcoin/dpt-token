@@ -18,13 +18,9 @@ export TEST_ETH_USD_RATE=280.7 # USD/ETH rate that the testfeed will provide
 export TEST_FEED_VALID=true  #testfeed will provide valid results
 
 ## Internal settings (do not touch these unless you know what you are doing!!)
-export ETH_KEYSTORE=`pwd`
 export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
-
 export ETH_RPC_URL=https://rinkeby.infura.io/YNDpY9Dt8YxdiQqyHEqA
 export ETH_KEYSTORE=`pwd`
-
-export NETWORK=$(seth chain)
 
 if ! [[ $DPT_USD_RATE =~ ^[0-9.]+$ ]]
     then
@@ -38,6 +34,8 @@ fi
 
 export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
 export ETH_GAS=${ETH_GAS:-"4000000"}
+# 1000000000 wei = 1 gwei
+export ETH_GAS_PRICE=${ETH_GAS_PRICE:-"8000000000"}
 export NETWORK=$(seth chain)
 
 # TODO:
@@ -48,41 +46,47 @@ test -z $NETWORK && exit 1
 
 dapp build
 
+# после Pre ICO вернуть обратно
 DPT=$(dapp create DPT)
-
 export DPT=$DPT
 echo -e "DPT DEPLOYED AT: $DPT\n"
 
-test -z $DPT && exit 1
+# # старый DPT контракт с ганачи
+# export DPT=0x636d59fd9b619082d363f7b3e54cf9123f5e48b3
 
-# if we are on testnet, create test feed
-if  ! [[ $NETWORK =~ ^(ethlive|etclive)$ ]]
-then
-	PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
-	echo -e "Test price feed address: $PRICE_FEED\n"
-	variable=ethUsdRate
-	echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))\n"
-	variable=feedValid
-	echo -e "$variable:$(seth call $PRICE_FEED "$variable()")\n"
-fi
+# echo -e "DPT DEPLOYED AT: $DPT\n"
 
-DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
+# test -z $DPT && exit 1
 
-export DPTICO=$DPTICO
-echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
+# # if we are on testnet, create test feed
+# if  ! [[ $NETWORK =~ ^(ethlive|etclive)$ ]]
+# then
+# 	PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
+# 	echo -e "Test price feed address: $PRICE_FEED\n"
+# 	variable=ethUsdRate
+# 	echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))\n"
+# 	variable=feedValid
+# 	echo -e "$variable:$(seth call $PRICE_FEED "$variable()")\n"
+# fi
 
-# enable DPTICO to manage DPT tokens
-seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+# DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
 
-# Print settings
+# export DPTICO=$DPTICO
+# echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
 
-echo -e "DPTICO settings:\n"
-for variable in dptUsdRate ethUsdRate
-do
-  echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $DPTICO "$variable()")))\n"
-done
+# # enable DPTICO to manage DPT tokens
+# # Юрик это будет делать вручную с Pre ICO контрактом
+# # seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-for variable in priceFeed feedValid dpt manualUsdRate
-do
-  echo -e "$variable:$(seth call $DPTICO "$variable()")\n"
-done
+# # Print settings
+
+# echo -e "DPTICO settings:\n"
+# for variable in dptUsdRate ethUsdRate
+# do
+#   echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $DPTICO "$variable()")))\n"
+# done
+
+# for variable in priceFeed feedValid dpt manualUsdRate
+# do
+#   echo -e "$variable:$(seth call $DPTICO "$variable()")\n"
+# done

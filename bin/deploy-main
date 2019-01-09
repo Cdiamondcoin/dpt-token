@@ -11,16 +11,16 @@ set -ex
 ## Settings
 PRICE_FEED="0x729D19f657BD0614b4985Cf1D82531c67569197B" #MakerDAO pricefeed address
 DPT_USD_RATE=3.5    #DPT price in terms of US Dollars (you can modify it in the smart ocntract)
-ETH_USD_RATE=259.84 #default value for ETH/USD rate. The rate is received from PRICE_FEED.
+ETH_USD_RATE=221.64 #default value for ETH/USD rate. The rate is received from PRICE_FEED.
 
 ## Settings for test networks like Rinkeby, Kovan, Ropsten
 export TEST_ETH_USD_RATE=280.7 # USD/ETH rate that the testfeed will provide
 export TEST_FEED_VALID=true  #testfeed will provide valid results
 
 ## Internal settings (do not touch these unless you know what you are doing!!)
-export ETH_KEYSTORE=`pwd`
-
 export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
+export ETH_RPC_URL=https://mainnet.infura.io/YNDpY9Dt8YxdiQqyHEqA
+export ETH_KEYSTORE=`pwd`
 
 if ! [[ $PRICE_FEED =~ ^0x[0-9a-fA-F]{40}$ ]]
     then
@@ -39,16 +39,21 @@ fi
 
 export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
 export ETH_GAS=${ETH_GAS:-"4000000"}
+# 1000000000 wei = 1 gwei
+export ETH_GAS_PRICE=${ETH_GAS_PRICE:-"10000000000"}
 export NETWORK=$(seth chain)
-export ETH_FROM=$(seth rpc eth_coinbase)
+
+# export ETH_FROM=$(seth rpc eth_coinbase)
+export ETH_FROM=0x19052f19b4fe4f78bc7bc95e0749c3516c571989
 
 test -z $NETWORK && exit 1
 
 dapp build
 
-DPT=$(dapp create DPT)
+# DPT=$(dapp create DPT)
 
-export DPT=$DPT
+# export DPT=$DPT
+export DPT=0x10c71515602429C19d53011EA7040B87a4894838
 echo -e "DPT DEPLOYED AT: $DPT\n"
 
 test -z $DPT && exit 1
@@ -59,7 +64,7 @@ export DPTICO=$DPTICO
 echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
 
 # enable DPTICO to manage DPT tokens
-seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+# seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 # Print settings
 echo -e "DPTICO settings:\n"

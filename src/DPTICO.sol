@@ -27,12 +27,13 @@ contract DPTICOEvents {
 }
 
 contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
-    uint public dptUsdRate;            //usd price of 1 DPT token. 18 digit precision
-    uint public ethUsdRate;            //price of ETH in USD. 18 digit precision
-    MedianizerLike public priceFeed;   //address of the Makerdao price feed
-    bool public feedValid;             //if true feed has valid USD/ETH rate
-    ERC20 public dpt;                  //DPT token contract
-    bool public manualUsdRate = true;  //if true enables token buy even if priceFeed does not provide valid data
+    uint public dptUsdRate;              //usd price of 1 DPT token. 18 digit precision
+    uint public ethUsdRate;              //price of ETH in USD. 18 digit precision
+    MedianizerLike public priceFeed;     //address of the Makerdao price feed
+    bool public feedValid;               //if true feed has valid USD/ETH rate
+    ERC20 public dpt;                    //DPT token contract
+    bool public manualUsdRate = true;    //if true enables token buy even if priceFeed does not provide valid data
+    uint public minDptInvestmentAmount = 0; //minimal amount of DPT to buy, if equal with 0 than validation is disabled
 
     /**
     * @dev Constructor
@@ -58,6 +59,7 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
         uint tokens;
         bool feedValidSave = feedValid;
         bytes32 ethUsdRateB;
+
         require(msg.value != 0, "Invalid amount");
 
         // receive ETH/USD price from external feed
@@ -77,6 +79,12 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
         }
 
         tokens = wdiv(wmul(ethUsdRate, msg.value), dptUsdRate);
+
+        // Validate invest amount, skip if minDptInvestmentAmount setted to 0
+        if (minDptInvestmentAmount != 0) {
+            require(msg.value >= minDptInvestmentAmount, "Token amount must be greater or equal than minimal investment amount");
+        }
+
         address(owner).transfer(msg.value);
         dpt.transferFrom(owner, msg.sender, tokens);
         emit LogBuyToken(owner, msg.sender, msg.value, tokens, ethUsdRate, dptUsdRate);
@@ -143,5 +151,13 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     */
     function setManualUsdRate(bool manualUsdRate_) public auth note {
         manualUsdRate = manualUsdRate_;
+    }
+
+    /**
+    * @dev Set mininimal amount to buy
+    *
+    */
+    function setMinDptInvestmenAmount(uint minDptInvestmentAmount_) public auth note {
+        minDptInvestmentAmount = minDptInvestmentAmount_;
     }
 }
