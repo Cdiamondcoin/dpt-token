@@ -46,37 +46,37 @@ test -z $NETWORK && exit 1
 
 dapp build
 
-# после Pre ICO вернуть обратно
-DPT=$(dapp create DPT)
-export DPT=$DPT
-echo -e "DPT DEPLOYED AT: $DPT\n"
+# Сделать новый DPT контракт
+# DPT=$(dapp create DPT)
+# export DPT=$DPT
+# echo -e "DPT DEPLOYED AT: $DPT\n"
 
-# # старый DPT контракт с ганачи
-# export DPT=0x636d59fd9b619082d363f7b3e54cf9123f5e48b3
+# старый DPT контракт
+export DPT=0x636d59fd9b619082d363f7b3e54cf9123f5e48b3
 
 # echo -e "DPT DEPLOYED AT: $DPT\n"
 
 # test -z $DPT && exit 1
 
-# # if we are on testnet, create test feed
-# if  ! [[ $NETWORK =~ ^(ethlive|etclive)$ ]]
-# then
-# 	PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
-# 	echo -e "Test price feed address: $PRICE_FEED\n"
-# 	variable=ethUsdRate
-# 	echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))\n"
-# 	variable=feedValid
-# 	echo -e "$variable:$(seth call $PRICE_FEED "$variable()")\n"
-# fi
+# if we are on testnet, create test feed
+if  ! [[ $NETWORK =~ ^(ethlive|etclive)$ ]]
+then
+	PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
+	echo -e "Test price feed address: $PRICE_FEED\n"
+	variable=ethUsdRate
+	echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))\n"
+	variable=feedValid
+	echo -e "$variable:$(seth call $PRICE_FEED "$variable()")\n"
+fi
 
-# DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
+DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
 
-# export DPTICO=$DPTICO
-# echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
+export DPTICO=$DPTICO
+echo -e "DPTICO DEPLOYED AT: $DPTICO\n"
 
-# # enable DPTICO to manage DPT tokens
-# # Юрик это будет делать вручную с Pre ICO контрактом
-# # seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+# enable DPTICO to manage DPT tokens
+# Юрик это будет делать вручную с Pre ICO контрактом
+# seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 # # Print settings
 
