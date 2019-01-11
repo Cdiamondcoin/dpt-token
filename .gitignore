@@ -4,3 +4,4 @@ build/
 out/
 keystore
 env
+bin/deploy-rinkeby
