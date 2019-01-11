@@ -82,7 +82,7 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
 
         // Validate invest amount, skip if minDptInvestmentAmount setted to 0
         if (minDptInvestmentAmount != 0) {
-            require(msg.value >= minDptInvestmentAmount, "Token amount must be greater or equal than minimal investment amount");
+            require(tokens >= minDptInvestmentAmount, "Token amount must be greater or equal than minimal investment amount");
         }
 
         address(owner).transfer(msg.value);
@@ -157,7 +157,7 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
     * @dev Set mininimal amount to buy
     *
     */
-    function setMinDptInvestmenAmount(uint minDptInvestmentAmount_) public auth note {
+    function setMinDptInvestmentAmount(uint minDptInvestmentAmount_) public auth note {
         minDptInvestmentAmount = minDptInvestmentAmount_;
     }
 }
