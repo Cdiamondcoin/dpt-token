@@ -81,9 +81,7 @@ contract DPTICO is DSAuth, DSStop, DSMath, DPTICOEvents {
         tokens = wdiv(wmul(ethUsdRate, msg.value), dptUsdRate);
 
         // Validate invest amount, skip if minDptInvestmentAmount setted to 0
-        if (minDptInvestmentAmount != 0) {
-            require(tokens >= minDptInvestmentAmount, "Token amount must be greater or equal than minimal investment amount");
-        }
+        require(tokens >= minDptInvestmentAmount, "Token amount must be greater or equal than minimal investment amount");
 
         address(owner).transfer(msg.value);
         dpt.transferFrom(owner, msg.sender, tokens);
