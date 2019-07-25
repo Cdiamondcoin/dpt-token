@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+### deploy -- command-line interface to deploy DPTICO smart contract
+### Usage: deploy
+
+### Before using deploy, you should copy the keystore file from your keystore to current directory. See:
+### geth - https://github.com/ethereum/go-ethereum/wiki/Backup-&-restore
+### parity - https://ethereum.stackexchange.com/questions/6471/where-are-my-keys-and-chain-data-located-if-i-am-using-parity
+
+set -ex
+
+## Settings
+PRICE_FEED="0x729D19f657BD0614b4985Cf1D82531c67569197B" #MakerDAO pricefeed address
+DPT_USD_RATE=3.5    #DPT price in terms of US Dollars (you can modify it in the smart ocntract)
+ETH_USD_RATE=160 #default value for ETH/USD rate. The rate is received from PRICE_FEED.
+
+## Settings for test networks like Rinkeby, Kovan, Ropsten
+export TEST_ETH_USD_RATE=100 #USD/ETH rate that the testfeed will provide
+export TEST_FEED_VALID=true  #testfeed will provide valid results
+
+if ! [[ $PRICE_FEED =~ ^0x[0-9a-fA-F]{40}$ ]]
+    then
+        exit 1
+fi
+
+if ! [[ $DPT_USD_RATE =~ ^[0-9.]+$ ]]
+    then
+        exit 1
+fi
+
+if ! [[ $ETH_USD_RATE =~ ^[0-9.]+$ ]]
+    then
+        exit 1
+fi
+
+## Internal settings (do not touch these unless you know what you are doing!!)
+export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
+export ETH_RPC_URL=https://rinkeby.infura.io/v3/47706a887c1245319e35b5e507c7f097
+export ETH_KEYSTORE="$(pwd)"
+
+export SOLC_FLAGS=${SOLC_FLAGS:-"--optimize"}
+export ETH_GAS=${ETH_GAS:-"4000000"}
+export ETH_FROM=0x9556E25F9b4D343ee38348b6Db8691d10fD08A61
+export NETWORK=$(seth chain)
+
+test -z $NETWORK && exit 1
+
+dapp --use solc:0.4.25 build
+
+hevm flatten --source-file src/DPT.sol --json-file out/DPT.sol.json > out/DPT-flatt.sol
+hevm flatten --source-file src/DPTICO.sol --json-file out/DPTICO.sol.json > out/DPTICO-flatt.sol
+
+DPT=$(dapp create DPT)
+
+export DPT=$DPT
+echo -e "DPT DEPLOYED AT: $DPT"
+
+test -z $DPT && exit 1
+
+DPTICO=$(dapp create DPTICO "$DPT" "$PRICE_FEED" "$(seth --to-uint256 $(seth --to-wei $DPT_USD_RATE eth))" "$(seth --to-uint256 $(seth --to-wei $ETH_USD_RATE eth))")
+
+export DPTICO=$DPTICO
+echo -e "DPTICO DEPLOYED AT: $DPTICO"
+
+#enable DPTICO to manage DPT tokens
+seth send $DPT "approve(address,uint)" $DPTICO ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+#Print settings
+# echo -e "DPTICO settings:\n"
+# for variable in dptUsdRate ethUsdRate
+# do
+#   echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $DPTICO "$variable()")))\n"
+# done
+
+# for variable in priceFeed feedValid dpt manualUsdRate
+# do
+#   echo -e "$variable:$(seth call $DPTICO "$variable()")\n"
+# done
+
+#if we are on testnet, create test feed
+PRICE_FEED=$(dapp create TestMedianizerLike $(seth --to-uint256 $(seth --to-wei ${TEST_ETH_USD_RATE:-300} eth)) ${TEST_FEED_VALID:-true})
+seth send $DPTICO "setPriceFeed(address)" $PRICE_FEED
+echo -e "Test price feed address: $PRICE_FEED"
+variable=ethUsdRate
+echo -e "$variable:$(seth --from-wei $(seth --to-dec $(seth call $PRICE_FEED "$variable()")))"
+variable=feedValid
+echo -e "$variable:$(seth call $PRICE_FEED "$variable()")"

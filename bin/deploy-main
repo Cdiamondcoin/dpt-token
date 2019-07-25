@@ -19,7 +19,7 @@ export TEST_FEED_VALID=true  #testfeed will provide valid results
 
 ## Internal settings (do not touch these unless you know what you are doing!!)
 export ETH_RPC_PORT=${ETH_RPC_PORT:-"8545"}
-export ETH_RPC_URL=https://mainnet.infura.io/YNDpY9Dt8YxdiQqyHEqA
+export ETH_RPC_URL=https://mainnet.infura.io/v3/47706a887c1245319e35b5e507c7f097
 export ETH_KEYSTORE=`pwd`
 
 if ! [[ $PRICE_FEED =~ ^0x[0-9a-fA-F]{40}$ ]]
