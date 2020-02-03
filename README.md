@@ -1,6 +1,6 @@
 # Diamond network  DPT token ERC20 Smart Contract
 
-One of the main purposes of [Diamond Network Project](https://cdiamondcoin.com/) is to create a diamond backed stable coin. To use the services of the platform you will need a utility token called DPT - Diamond Platform Token. Current repository contains the [ERC20](https://github.com/ethereum/EIPs/issues/20) compatible smart contract of DPT token, and also the smart contract supporting the ICO of DPT.
+One of the main purposes of [Cdiamondcoin Project](https://cdiamondcoin.com/) is to create a diamond backed-up stablecoin. To use the services of the platform you will need a utility token called DPT - Diamond Platform Token. The current repository contains the [ERC20](https://github.com/ethereum/EIPs/issues/20) compatible smart contract of DPT token, and also the smart contract supporting the ICO of DPT.
 
 ## Prerequisities
 
